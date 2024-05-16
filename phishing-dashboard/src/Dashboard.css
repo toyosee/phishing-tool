@@ -1,0 +1,64 @@
+.dashboard {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px;
+}
+
+.stat-title {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.emails {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.email {
+    background: #fff;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+    width: 80%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.email h3 {
+    margin: 0 0 10px 0;
+}
+
+.email p {
+    margin: 0;
+}
+
+.email.flagged {
+    border-left: 5px solid red;
+}
+
+.infoMsg{
+    border-bottom: 10px;
+}
