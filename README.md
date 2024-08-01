@@ -22,16 +22,21 @@ The application leverages machine learning techniques to analyze email content a
 
 Libraries Used
 
-    Python: Used for backend development.
-        Flask: Web framework for building the API.
-        imaplib: Library for accessing IMAP mailboxes.
-        scikit-learn: Library for machine learning tasks.
-        pickle: Library for serializing/deserializing Python objects.
-        dotenv: Library for loading environment variables from .env file.
-    JavaScript (React): Used for frontend development.
-        axios: Library for making HTTP requests.
-        react: JavaScript library for building user interfaces.
-        tailwindcss: Utility-first CSS framework for styling.
+Python: Used for backend development.
+
+    Flask: Web framework for building the API.
+    imaplib: Library for accessing IMAP mailboxes.
+    scikit-learn: Library for machine learning tasks.
+    pickle: Library for serializing/deserializing Python objects.
+    dotenv: Library for loading environment variables from a .env file.
+
+JavaScript (React): Used for frontend development.
+
+    axios: Library for making HTTP requests.
+    react: JavaScript library for building user interfaces.
+    tailwindcss: Utility-first CSS framework for styling.
+    react-chartjs-2: Library for rendering Chart.js charts, including Doughnut charts.
+    chart.js: JavaScript library for creating charts and visualizations.
 
 How to Run and Deploy
 

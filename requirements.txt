@@ -1,0 +1,6 @@
+Flask==2.3.2
+imaplib==0.3.1
+scikit-learn==1.2.2
+pickle5==0.0.11
+python-dotenv==1.0.0
+beautifulsoup4==4.12.2

@@ -2,4 +2,5 @@
 phishing_model.pkl
 vectorizer.pkl
 read_pkl.py
+inboxSpam.py
 documentation
