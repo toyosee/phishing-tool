@@ -18,7 +18,6 @@ import pickle
 from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_cors import CORS
-from bs4 import BeautifulSoup  # Import BeautifulSoup for HTML parsing
 
 # Load environment variables from .env file
 load_dotenv()
@@ -38,22 +37,20 @@ class EmailPhishingDetector:
             mail = imaplib.IMAP4_SSL(self.server)
             mail.login(self.email_id, self.password)
             
-            # Fetch emails from inbox
+            # Fetch emails from inbox only
             mail.select('inbox')
             result, data = mail.search(None, 'ALL')
-            inbox_email_ids = data[0].split()[-limit:]
-            
-            # Fetch emails from spam
-            mail.select('[Gmail]/Spam')
-            result, data = mail.search(None, 'ALL')
-            spam_email_ids = data[0].split()[-limit:]
-            
-            email_ids = inbox_email_ids + spam_email_ids
+            if data is None or data[0] is None:
+                print('No emails found.')
+                return []
+
+            email_ids = data[0].split()[-limit:]  # Fetch only the last 'limit' number of emails
             emails = []
 
             for e_id in email_ids:
                 result, msg_data = mail.fetch(e_id, '(RFC822)')
                 if msg_data is None or msg_data[0] is None:
+                    print(f'No data for email id {e_id}')
                     continue
 
                 msg = email.message_from_bytes(msg_data[0][1])
@@ -75,19 +72,10 @@ class EmailPhishingDetector:
                         part_payload = part.get_payload(decode=True)
                         if part_payload:
                             body += part_payload.decode('utf-8', errors='ignore')
-                    elif part.get_content_type() == 'text/html' and part.get('Content-Disposition') is None:
-                        part_payload = part.get_payload(decode=True)
-                        if part_payload:
-                            soup = BeautifulSoup(part_payload, 'html.parser')
-                            body += soup.get_text(separator=' ')  # Get text without HTML tags
             else:
                 body_payload = email_message.get_payload(decode=True)
                 if body_payload:
-                    if email_message.get_content_type() == 'text/html':
-                        soup = BeautifulSoup(body_payload, 'html.parser')
-                        body = soup.get_text(separator=' ')  # Get text without HTML tags
-                    else:
-                        body = body_payload.decode('utf-8', errors='ignore')
+                    body = body_payload.decode('utf-8', errors='ignore')
             return subject, body
         except Exception as e:
             print(f'Error preprocessing email: {e}')
@@ -132,6 +120,25 @@ class EmailPhishingDetector:
         prediction = model.predict(email_features)
         return prediction[0]
 
+def get_sample_dataset():
+    # This is a placeholder for a sample dataset with labeled emails
+    # In a real application, you would load this from a file or database
+    sample_emails = [
+        {"subject": "Free money!", "body": "Click here to claim your prize!", "is_phishing": 1},
+        {"subject": "Meeting reminder", "body": "Don't forget our meeting tomorrow at 10am.", "is_phishing": 0},
+        {"subject": "Account update", "body": "Please update your account information.", "is_phishing": 1},
+        {"subject": "Weekly report", "body": "Here is the weekly report you requested.", "is_phishing": 0},
+        # Add more emails for training
+    ]
+    emails = []
+    for email_item in sample_emails:
+        msg = email.message.EmailMessage()
+        msg.set_content(email_item['body'])
+        msg['Subject'] = email_item['subject']
+        emails.append(msg)
+    labels = [email["is_phishing"] for email in sample_emails]
+    return emails, labels
+
 @app.route('/fetch_emails', methods=['GET'])
 def fetch_emails():
     server = os.getenv('SERVER_DETAILS')
@@ -140,20 +147,21 @@ def fetch_emails():
     limit = int(os.getenv('EMAIL_FETCH_LIMIT', 50))  # Get the limit from .env file, default to 50
 
     detector = EmailPhishingDetector(server, email_id, password)
-    emails = detector.fetch_emails(limit=limit)
-    
-    # Generate labels dynamically (Example: mix of phishing and non-phishing for testing)
-    labels = [0 if i % 2 == 0 else 1 for i in range(len(emails))]  # Example: Alternate between non-phishing and phishing
+    fetched_emails = detector.fetch_emails(limit=limit)
 
-    if emails:
+    sample_emails, sample_labels = get_sample_dataset()
+    all_emails = sample_emails + fetched_emails
+    all_labels = sample_labels + [0] * len(fetched_emails)  # Assume all fetched emails are non-phishing for now
+
+    if all_emails:
         try:
-            model = detector.train_model(emails, labels)
+            model = detector.train_model(all_emails, all_labels)
         except ValueError as e:
             return jsonify({'error': str(e)})
 
         flagged_emails = []
-        all_emails = []
-        for email in emails:
+        response_emails = []
+        for email in fetched_emails:
             prediction = detector.detect_phishing(email, model)
             subject, body = detector.preprocess_email(email)
             email_data = {
@@ -161,14 +169,14 @@ def fetch_emails():
                 'body': body,
                 'is_phishing': bool(prediction)
             }
-            all_emails.append(email_data)
+            response_emails.append(email_data)
             if prediction == 1:
                 flagged_emails.append(email_data)
 
         return jsonify({
             'message': 'Emails fetched successfully',
-            'total_emails': len(emails),
-            'all_emails': all_emails,
+            'total_emails': len(fetched_emails),
+            'all_emails': response_emails,
             'flagged_count': len(flagged_emails),
             'flagged_emails': flagged_emails
         })

@@ -14,9 +14,19 @@ h1 {
     margin-bottom: 20px;
 }
 
-.stat-item {
+.stat-item-total {
     text-align: center;
-    background: #f0f0f0;
+    background: #36A2EB;
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px;
+    color: white;
+}
+
+.stat-item-flagged {
+    text-align: center;
+    background: #FF6384;
+    color: #fff;
     padding: 10px;
     border-radius: 5px;
     width: 200px;
@@ -44,7 +54,11 @@ h1 {
     margin: 10px 0;
     border-radius: 5px;
     width: 80%;
+    max-width: 1200px; /* Ensure a max width for better readability */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-wrap: break-word; /* Ensures long words wrap */
+    word-wrap: break-word; /* Additional wrapping for older browsers */
+    /*white-space: pre-wrap; /* Preserves whitespace and wraps long text */
 }
 
 .email h3 {
@@ -53,12 +67,17 @@ h1 {
 
 .email p {
     margin: 0;
+    word-break: break-word; /* Ensures long words break */
 }
 
 .email.flagged {
     border-left: 5px solid red;
 }
 
-.infoMsg{
+.infoMsg {
     border-bottom: 10px;
+}
+
+.text-muted{
+    opacity: 0.5;
 }
