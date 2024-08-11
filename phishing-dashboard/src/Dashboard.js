@@ -1,42 +1,60 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { RingLoader } from 'react-spinners'; // Import loading animation
-import { Doughnut } from 'react-chartjs-2'; // Import Doughnut chart
-import 'chart.js/auto'; // Import Chart.js
-import ChartDataLabels from 'chartjs-plugin-datalabels'; // Import Chart.js Data Labels plugin
+import { RingLoader } from 'react-spinners';
+import { Doughnut, Bar } from 'react-chartjs-2';
+import 'chart.js/auto';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import './Dashboard.css';
-// import './index.css'; // Import Tailwind CSS styles
 
 const Dashboard = () => {
     const [emails, setEmails] = useState([]);
     const [totalEmails, setTotalEmails] = useState(0);
     const [flaggedCount, setFlaggedCount] = useState(0);
-    const [loading, setLoading] = useState(true); // State for loading animation
+    const [emailLengths, setEmailLengths] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [phishingKeywords, setPhishingKeywords] = useState([]);  // Add state for keywords
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [emailsPerPage] = useState(10); // Number of emails per page
+
     const url = 'http://localhost:5000/fetch_emails';
 
     useEffect(() => {
         axios.get(url)
             .then(response => {
-                console.log(response.data); // Log the response for debugging
+                console.log(response.data);
                 setEmails(response.data.all_emails);
                 setTotalEmails(response.data.total_emails);
                 setFlaggedCount(response.data.flagged_count);
-                setLoading(false); // Turn off loading animation
-                console.log(response.data.all_emails)
+                setEmailLengths(response.data.email_lengths);
+                setPhishingKeywords(response.data.phishing_keywords || []); 
+                setLoading(false);
             })
             .catch(error => {
                 console.error('Error fetching emails:', error);
-                setLoading(false); // Turn off loading animation even in case of error
+                setLoading(false);
             });
     }, []);
 
+    // Pagination logic
+    const indexOfLastEmail = currentPage * emailsPerPage;
+    const indexOfFirstEmail = indexOfLastEmail - emailsPerPage;
+    const currentEmails = emails.slice(indexOfFirstEmail, indexOfLastEmail);
+
+    const paginate = pageNumber => setCurrentPage(pageNumber);
+
+    const highlightKeywords = (text, keywords) => {
+        const regex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
+        return text.replace(regex, match => `<span class="highlight">${match}</span>`);
+    };
+
     const doughnutData = {
-        labels: ['Other Emails', 'Flagged Emails'], // Change order of labels
+        labels: ['Other Emails', 'Flagged Emails'],
         datasets: [
             {
                 label: 'Emails',
-                data: [totalEmails - flaggedCount, flaggedCount], // Change order of data
-                backgroundColor: ['#36A2EB', '#FF6384'], // Update colors to match the new order
+                data: [totalEmails - flaggedCount, flaggedCount],
+                backgroundColor: ['#36A2EB', '#FF6384'],
                 hoverBackgroundColor: ['#36A2EB', '#FF6384']
             }
         ]
@@ -55,10 +73,8 @@ const Dashboard = () => {
             tooltip: {
                 callbacks: {
                     label: (tooltipItem) => {
-                        const dataset = tooltipItem.dataset;
-                        const dataIndex = tooltipItem.dataIndex;
-                        const value = dataset.data[dataIndex];
-                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                        const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
+                        const value = tooltipItem.raw;
                         const percentage = (value / total * 100).toFixed(2) + '%';
                         return `${tooltipItem.label}: ${value} (${percentage})`;
                     }
@@ -81,7 +97,39 @@ const Dashboard = () => {
         legend: {
             position: 'top',
         }
-    };    
+    };
+
+    const barData = {
+        labels: Array.from({ length: emailLengths.length }, (_, i) => i + 1),
+        datasets: [
+            {
+                label: 'Email Lengths',
+                data: emailLengths,
+                backgroundColor: 'rgba(75,192,192,0.4)',
+                borderColor: 'rgba(75,192,192,1)',
+                borderWidth: 1
+            }
+        ]
+    };
+
+    const barOptions = {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Email Index'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Email Length'
+                }
+            }
+        }
+    };
 
     return (
         <div className="dashboard">
@@ -93,7 +141,7 @@ const Dashboard = () => {
                             <strong>Loading Mails...</strong>
                         </div>
                         <div className="flex justify-center items-center">
-                            <RingLoader color="#3B82F6" loading={loading} size={80} /> {/* Loading animation */}
+                            <RingLoader color="#3B82F6" loading={loading} size={80} />
                         </div>
                     </div>
                 </>
@@ -112,13 +160,28 @@ const Dashboard = () => {
                     <div className="chart-container mb-8" style={{ height: '300px' }}>
                         <Doughnut data={doughnutData} options={doughnutOptions} plugins={[ChartDataLabels]} />
                     </div>
+                    <div className="chart-container mb-8" style={{ height: '300px' }}>
+                        <Bar data={barData} options={barOptions} />
+                    </div>
                     <div className="emails">
-                        {emails.map((email, index) => (
+                        {currentEmails.map((email, index) => (
                             <div key={index} className={`email ${email.is_phishing ? 'flagged' : ''}`}>
                                 <h3>{email.subject}</h3>
-                                <p>{email.body}</p>
-                                <p>Status: {email.is_phishing ? 'Phishing' : 'Not Phishing'}</p>
+                                <p dangerouslySetInnerHTML={{ __html: highlightKeywords(email.body, phishingKeywords) }}></p>
+                                <p><strong>Status:</strong> {email.is_phishing ? 'Phishing' : 'Not Phishing'}</p>
+                                <p><strong>Score:</strong> {email.score || 'N/A'}</p>  {/* Display score */}
                             </div>
+                        ))}
+                    </div>
+                    <div className="pagination">
+                        {Array.from({ length: Math.ceil(emails.length / emailsPerPage) }, (_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => paginate(i + 1)}
+                                className={`page-link ${currentPage === i + 1 ? 'active' : ''}`}
+                            >
+                                {i + 1}
+                            </button>
                         ))}
                     </div>
                 </>
