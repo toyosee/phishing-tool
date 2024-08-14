@@ -15,14 +15,14 @@ const Dashboard = () => {
     const [phishingKeywords, setPhishingKeywords] = useState([]);  // Add state for keywords
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [emailsPerPage] = useState(10); // Number of emails per page
+    const [emailsPerPage] = useState(30); // Number of emails per page
 
     const url = 'http://localhost:5000/fetch_emails';
 
     useEffect(() => {
         axios.get(url)
             .then(response => {
-                console.log(response.data);
+                //console.log(response.data);
                 setEmails(response.data.all_emails);
                 setTotalEmails(response.data.total_emails);
                 setFlaggedCount(response.data.flagged_count);

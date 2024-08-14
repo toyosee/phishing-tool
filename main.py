@@ -166,7 +166,7 @@ def fetch_emails():
         processed_email_body = detector.preprocess_email(email_msg)[1]
         # Calculate phishing score based on keywords
         score = sum(keyword['Score'] for keyword in phishing_keywords if keyword['Keywords'].lower() in processed_email_body.lower())
-        labels.append(1 if score >= 5 else 0)  # Flag email if score >= 5
+        labels.append(1 if score >= 7 else 0)  # Flag email if score >= 5
 
     if emails:
         try:
