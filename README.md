@@ -1,7 +1,7 @@
 Email Phishing Detection Dashboard
 Use Case
 
-The Email Phishing Detection Dashboard is a web application designed to analyze emails and identify potential phishing attempts. It integrates with email systems to fetch emails, preprocess their content, and classify them as either phishing or non-phishing using machine learning algorithms. The dashboard provides insights into the total number of emails, flagged emails, and their status.
+The Email Phishing Detection Dashboard is a web application that analyzes emails and identifies potential phishing attempts. It integrates with email systems to fetch emails, preprocess their content, and classify them as either phishing or non-phishing using machine learning algorithms. The dashboard provides insights into the total number of emails, flagged emails, and their status.
 
 The application uses a supervised learning algorithm, specifically a Random Forest Classifier, to train a model on the labeled email data. During training, the model learns patterns and relationships in the input data that correlate with the provided output labels.
 
@@ -18,7 +18,7 @@ Learning Models Used
 
 AI Capability
 
-The application leverages machine learning techniques to analyze email content and predict whether an email is likely to be a phishing attempt. It employs natural language processing (NLP) to preprocess email text and extract relevant features for classification.
+The application leverages machine learning techniques to analyze email content and predict whether an email will likely be a phishing attempt. It employs natural language processing (NLP) to preprocess email text and extract relevant features for classification.
 
 Libraries Used
 
@@ -56,7 +56,7 @@ How to Run and Deploy
     4. Run Backend: Start the Flask server for the backend.
     python main.py
 
-    5. Run Frontend: In a separate terminal, start the React development server for the frontend.
+    5. Run Frontend: In a separate terminal, start the React development server for the front end.
     npm start
 
     6. Access Dashboard: Open your browser and navigate to http://localhost:3000 to access the Phishing Detection Dashboard.
